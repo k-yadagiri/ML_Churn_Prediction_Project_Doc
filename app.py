@@ -19,11 +19,11 @@ st.markdown("<h1 style='text-align: center;font-size: 50px; color: #FFFFFF;'> Cu
 st.markdown("---")
 
 # --- Load Model and Preprocessing Objects ---
-with open("/mnt/data/advanced_churn_model.pkl", "rb") as f:
+with open("advanced_churn_model.pkl", "rb") as f:
     model = pickle.load(f)
 
 with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)  # This must be a StandardScaler object
+    scaler = pickle.load(f)  # StandardScaler object
 
 with open("feature_names.pkl", "rb") as f:
     feature_names = pickle.load(f)
