@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import pickle
 from PIL import Image
+import os # Import os module for path manipulation
 
 # --- Page config ---
 st.set_page_config(page_title="Customer Churn Prediction", page_icon="🔍", layout="wide")
@@ -11,23 +12,44 @@ st.set_page_config(page_title="Customer Churn Prediction", page_icon="🔍", lay
 # --- Logo Section ---
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    logo = Image.open("logo.png")
-    resized_logo = logo.resize((600, 150))  # Adjust logo size for better fit
-    st.image(resized_logo)
+    # Define the path to your logo. Assumes 'logo.png' is in the same directory as this script.
+    # If it's in a subfolder, e.g., 'assets', change this to os.path.join("assets", "logo.png")
+    logo_path = "logo.png"
+    if os.path.exists(logo_path):
+        logo = Image.open(logo_path)
+        resized_logo = logo.resize((600, 150))  # Adjust logo size for better fit
+        st.image(resized_logo)
+    else:
+        st.warning(f"Logo file not found at {logo_path}. Please ensure 'logo.png' is in the correct directory.")
 
 # --- App Title ---
 st.markdown("<h1 style='text-align: center;font-size: 50px; color: #FFFFFF;'> Customer Churn Prediction App</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --- Load Model and Preprocessing Objects ---
-with open("churn_knn_model.pkl", "rb") as f:
-    model = pickle.load(f)
+# Define paths to your model, scaler, and feature names files.
+# Assumes they are in the same directory as this script.
+# If they are in a 'models' subfolder, change paths like:
+# model_file = os.path.join("models", "advanced_churn_model.pkl")
+model_file = "advanced_churn_model.pkl"
+scaler_file = "scaler.pkl"
+feature_names_file = "feature_names.pkl"
 
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)  # This must be a StandardScaler object, not a NumPy array
+try:
+    with open(model_file, "rb") as f:
+        model = pickle.load(f)
 
-with open("feature_names.pkl", "rb") as f:
-    feature_names = pickle.load(f)
+    with open(scaler_file, "rb") as f:
+        scaler = pickle.load(f)
+
+    with open(feature_names_file, "rb") as f:
+        feature_names = pickle.load(f)
+
+except FileNotFoundError as e:
+    st.error(f"Error loading required files: {e}. "
+             f"Please ensure the following files are in the correct directory: "
+             f"'{model_file}', '{scaler_file}', '{feature_names_file}'.")
+    st.stop() # Stop the app execution if crucial files are not found
 
 # --- Input Form ---
 st.markdown("### 📋 Enter Customer Details")
