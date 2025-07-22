@@ -1,8 +1,11 @@
 import streamlit as st
-import numpy as np
 import pandas as pd
+import numpy as np
 import pickle
+import os
 from PIL import Image
+from sklearn.dummy import DummyClassifier
+from sklearn.preprocessing import StandardScaler
 
 # --- Page config ---
 st.set_page_config(page_title="Customer Churn Prediction", page_icon="🔍", layout="wide")
@@ -15,25 +18,46 @@ with col2:
         resized_logo = logo.resize((600, 150))
         st.image(resized_logo)
     except:
-        st.write("")
+        st.warning("Logo not found. Please upload 'logo.png' if you want to display a logo.")
 
 # --- App Title ---
 st.markdown("<h1 style='text-align: center;font-size: 50px; color: #FFFFFF;'> Customer Churn Prediction App</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- Load model ---
+# --- Load Model and Scaler ---
+model = None
+scaler = None
+feature_names = []
+
 try:
-    with open("/mnt/data/advanced_churn_model.pkl", "rb") as f:
+    with open("advanced_churn_model.pkl", "rb") as f:
         model = pickle.load(f)
+    st.success("✅ Model loaded successfully.")
 except Exception as e:
-    st.error("❌ Failed to load the model file. Please ensure the .pkl model is correctly uploaded.")
-    st.stop()
+    st.error("❌ Failed to load the model file. Using Dummy Model instead.")
+    model = DummyClassifier(strategy="most_frequent")
+    model.fit([[0]*5], [0])  # Fake fit
+    scaler = StandardScaler()
+    scaler.fit([[0]*5])  # Dummy scaler
+    feature_names = ['SeniorCitizen', 'tenure', 'MonthlyCharges', 'gender_Male', 'Contract_Month-to-month']
+
+if model and scaler is None:
+    try:
+        with open("scaler.pkl", "rb") as f:
+            scaler = pickle.load(f)
+        with open("feature_names.pkl", "rb") as f:
+            feature_names = pickle.load(f)
+    except:
+        st.warning("⚠ Scaler or feature names not found. Using default dummy ones.")
+        scaler = StandardScaler()
+        scaler.fit([[0]*5])
+        feature_names = ['SeniorCitizen', 'tenure', 'MonthlyCharges', 'gender_Male', 'Contract_Month-to-month']
 
 # --- Input Form ---
 st.markdown("### 📋 Enter Customer Details")
 
 with st.form("churn_form"):
-    col1, col2 = st.columns([1, 1])
+    col1, col2 = st.columns(2)
 
     with col1:
         gender = st.selectbox("Gender", ["Male", "Female"])
@@ -54,13 +78,13 @@ with st.form("churn_form"):
         tenure = st.slider("Tenure (months)", 0, 72, 12)
         MonthlyCharges = st.number_input("Monthly Charges", 0.0, 200.0, step=1.0)
 
-    submitted = st.form_submit_button("🔍 Predict Churn")
+    submitted = st.form_submit_button(" Predict Churn")
 
 # --- Prediction ---
 if submitted:
     st.markdown("---")
 
-    # Prepare input dictionary
+    # Prepare input
     input_dict = {
         'SeniorCitizen': SeniorCitizen,
         'tenure': tenure,
@@ -79,26 +103,21 @@ if submitted:
         f'Contract_{Contract}': 1
     }
 
-    # Convert to DataFrame
     input_df = pd.DataFrame([input_dict])
-
-    # Align with model's expected features
-    try:
-        model_features = model.feature_names_in_
-    except AttributeError:
-        model_features = input_df.columns  # fallback if model doesn't provide feature names
-
-    for col in model_features:
+    for col in feature_names:
         if col not in input_df.columns:
             input_df[col] = 0
-    input_df = input_df[model_features]
+    input_df = input_df[feature_names]
 
-    # Predict
-    prediction = model.predict(input_df)[0]
+    # Scale and predict
+    try:
+        input_scaled = scaler.transform(input_df)
+        prediction = model.predict(input_scaled)[0]
 
-    # Display result
-    st.markdown("### 🎯 Prediction Result:")
-    if prediction == 1:
-        st.error("❌ The customer is likely to churn.")
-    else:
-        st.success("✅ The customer is likely to stay.")
+        st.markdown("### Prediction Result:")
+        if prediction == 1:
+            st.error("❌ The customer is likely to churn.")
+        else:
+            st.success("✅ The customer is likely to stay.")
+    except Exception as e:
+        st.error(f"🚫 Prediction failed: {e}")
