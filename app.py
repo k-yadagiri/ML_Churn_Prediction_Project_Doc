@@ -3,8 +3,6 @@ import numpy as np
 import pandas as pd
 import pickle
 from PIL import Image
-from sklearn.dummy import DummyClassifier
-from sklearn.preprocessing import StandardScaler
 
 # --- Page config ---
 st.set_page_config(page_title="Customer Churn Prediction", page_icon="🔍", layout="wide")
@@ -14,45 +12,22 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     try:
         logo = Image.open("logo.png")
-        resized_logo = logo.resize((600, 150))  # Adjust logo size for better fit
+        resized_logo = logo.resize((600, 150))
         st.image(resized_logo)
     except:
-        st.warning("⚠ Logo not found.")
+        st.write("")
 
 # --- App Title ---
 st.markdown("<h1 style='text-align: center;font-size: 50px; color: #FFFFFF;'> Customer Churn Prediction App</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- Load Model and Preprocessing Objects ---
-model = None
-scaler = None
-feature_names = []
-
+# --- Load model ---
 try:
-    with open("advanced_churn_model.pkl", "rb") as f:
+    with open("/mnt/data/advanced_churn_model.pkl", "rb") as f:
         model = pickle.load(f)
-    with open("scaler.pkl", "rb") as f:
-        scaler = pickle.load(f)
-    with open("feature_names.pkl", "rb") as f:
-        feature_names = pickle.load(f)
 except Exception as e:
-    st.warning("⚠ Could not load model files. Using dummy model for testing UI only.")
-    # Dummy model fallback (for UI testing only)
-    feature_names = ['SeniorCitizen', 'tenure', 'MonthlyCharges',
-                     'gender_Male', 'gender_Female', 'Partner_Yes', 'Partner_No',
-                     'Dependents_Yes', 'Dependents_No', 'PhoneService_Yes', 'PhoneService_No',
-                     'MultipleLines_Yes', 'MultipleLines_No', 'MultipleLines_No phone service',
-                     'InternetService_DSL', 'InternetService_Fiber optic', 'InternetService_No',
-                     'OnlineSecurity_Yes', 'OnlineSecurity_No',
-                     'OnlineBackup_Yes', 'OnlineBackup_No',
-                     'DeviceProtection_Yes', 'DeviceProtection_No',
-                     'TechSupport_Yes', 'TechSupport_No',
-                     'StreamingTV_Yes', 'StreamingTV_No',
-                     'Contract_Month-to-month', 'Contract_One year', 'Contract_Two year']
-    scaler = StandardScaler()
-    scaler.fit([[0] * len(feature_names)])
-    model = DummyClassifier(strategy="most_frequent")
-    model.fit([[0] * len(feature_names)], [0])  # Dummy training
+    st.error("❌ Failed to load the model file. Please ensure the .pkl model is correctly uploaded.")
+    st.stop()
 
 # --- Input Form ---
 st.markdown("### 📋 Enter Customer Details")
@@ -79,13 +54,13 @@ with st.form("churn_form"):
         tenure = st.slider("Tenure (months)", 0, 72, 12)
         MonthlyCharges = st.number_input("Monthly Charges", 0.0, 200.0, step=1.0)
 
-    submitted = st.form_submit_button(" Predict Churn")
+    submitted = st.form_submit_button("🔍 Predict Churn")
 
 # --- Prediction ---
 if submitted:
     st.markdown("---")
 
-    # Prepare input dictionary for prediction
+    # Prepare input dictionary
     input_dict = {
         'SeniorCitizen': SeniorCitizen,
         'tenure': tenure,
@@ -104,19 +79,25 @@ if submitted:
         f'Contract_{Contract}': 1
     }
 
-    # Convert to DataFrame and align with model features
+    # Convert to DataFrame
     input_df = pd.DataFrame([input_dict])
-    for col in feature_names:
+
+    # Align with model's expected features
+    try:
+        model_features = model.feature_names_in_
+    except AttributeError:
+        model_features = input_df.columns  # fallback if model doesn't provide feature names
+
+    for col in model_features:
         if col not in input_df.columns:
             input_df[col] = 0
-    input_df = input_df[feature_names]
+    input_df = input_df[model_features]
 
-    # Scale input and make prediction
-    input_scaled = scaler.transform(input_df)
-    prediction = model.predict(input_scaled)[0]
+    # Predict
+    prediction = model.predict(input_df)[0]
 
     # Display result
-    st.markdown("###  Prediction Result:")
+    st.markdown("### 🎯 Prediction Result:")
     if prediction == 1:
         st.error("❌ The customer is likely to churn.")
     else:
