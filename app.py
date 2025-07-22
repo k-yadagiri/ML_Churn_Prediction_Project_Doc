@@ -18,15 +18,6 @@ with col2:
 st.markdown("<h1 style='text-align: center;font-size: 50px; color: #FFFFFF;'> Customer Churn Prediction App</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
-# --- Load Model and Preprocessing Objects ---
-with open("advanced_churn_model.pkl", "rb") as f:
-    model = pickle.load(f)
-
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)  # StandardScaler object
-
-with open("feature_names.pkl", "rb") as f:
-    feature_names = pickle.load(f)
 
 # --- Input Form ---
 st.markdown("### 📋 Enter Customer Details")
