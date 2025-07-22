@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import pickle
 from PIL import Image
+from sklearn.dummy import DummyClassifier
+from sklearn.preprocessing import StandardScaler
 
 # --- Page config ---
 st.set_page_config(page_title="Customer Churn Prediction", page_icon="🔍", layout="wide")
@@ -10,23 +12,47 @@ st.set_page_config(page_title="Customer Churn Prediction", page_icon="🔍", lay
 # --- Logo Section ---
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    logo = Image.open("logo.png")
-    resized_logo = logo.resize((600, 150))  # Adjust logo size for better fit
-    st.image(resized_logo)
+    try:
+        logo = Image.open("logo.png")
+        resized_logo = logo.resize((600, 150))  # Adjust logo size for better fit
+        st.image(resized_logo)
+    except:
+        st.warning("⚠ Logo not found.")
 
 # --- App Title ---
 st.markdown("<h1 style='text-align: center;font-size: 50px; color: #FFFFFF;'> Customer Churn Prediction App</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
 # --- Load Model and Preprocessing Objects ---
-with open("advanced_churn_model.pkl", "rb") as f:
-    model = pickle.load(f)
+model = None
+scaler = None
+feature_names = []
 
-with open("scaler.pkl", "rb") as f:
-    scaler = pickle.load(f)
-
-with open("feature_names.pkl", "rb") as f:
-    feature_names = pickle.load(f)
+try:
+    with open("advanced_churn_model.pkl", "rb") as f:
+        model = pickle.load(f)
+    with open("scaler.pkl", "rb") as f:
+        scaler = pickle.load(f)
+    with open("feature_names.pkl", "rb") as f:
+        feature_names = pickle.load(f)
+except Exception as e:
+    st.warning("⚠ Could not load model files. Using dummy model for testing UI only.")
+    # Dummy model fallback (for UI testing only)
+    feature_names = ['SeniorCitizen', 'tenure', 'MonthlyCharges',
+                     'gender_Male', 'gender_Female', 'Partner_Yes', 'Partner_No',
+                     'Dependents_Yes', 'Dependents_No', 'PhoneService_Yes', 'PhoneService_No',
+                     'MultipleLines_Yes', 'MultipleLines_No', 'MultipleLines_No phone service',
+                     'InternetService_DSL', 'InternetService_Fiber optic', 'InternetService_No',
+                     'OnlineSecurity_Yes', 'OnlineSecurity_No',
+                     'OnlineBackup_Yes', 'OnlineBackup_No',
+                     'DeviceProtection_Yes', 'DeviceProtection_No',
+                     'TechSupport_Yes', 'TechSupport_No',
+                     'StreamingTV_Yes', 'StreamingTV_No',
+                     'Contract_Month-to-month', 'Contract_One year', 'Contract_Two year']
+    scaler = StandardScaler()
+    scaler.fit([[0] * len(feature_names)])
+    model = DummyClassifier(strategy="most_frequent")
+    model.fit([[0] * len(feature_names)], [0])  # Dummy training
 
 # --- Input Form ---
 st.markdown("### 📋 Enter Customer Details")
@@ -95,4 +121,3 @@ if submitted:
         st.error("❌ The customer is likely to churn.")
     else:
         st.success("✅ The customer is likely to stay.")
-
