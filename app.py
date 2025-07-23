@@ -18,7 +18,7 @@ try:
         scaler = model_data["scaler"]
         feature_names = model_data["features"]
 except Exception as e:
-    st.error("❌ Failed to load the model file. Please ensure 'advanced_churn_model.pkl' is in the app directory.")
+    st.error(" Failed to load the model file. Please ensure 'advanced_churn_model.pkl' is in the app directory.")
     st.stop()
 
 # --- Logo or Banner ---
@@ -97,11 +97,11 @@ if submitted:
     prediction = model.predict(input_scaled)[0]
 
     # Display result
-    st.markdown("### 🎯 Prediction Result:")
+    st.markdown("###  Prediction Result:")
     if prediction == 1:
-        st.error("❌ The customer is likely to churn.")
+        st.error(" The customer is likely to churn.")
     else:
-        st.success("✅ The customer is likely to stay.")
+        st.success(" The customer is likely to stay.")
 
 # --- Footer ---
 st.markdown("---")
