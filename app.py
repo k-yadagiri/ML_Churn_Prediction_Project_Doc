@@ -1,100 +1,193 @@
-import streamlit as st 
-import numpy as np
+import streamlit as st
 import pandas as pd
+import plotly.express as px
 import pickle
-from PIL import Image
-import os
 
-# --- Page config ---
-st.set_page_config(page_title="🔍 Churn Predictor", page_icon="🔍", layout="wide")
+# Page config
+st.set_page_config(page_title="Telecom Churn Dashboard", page_icon="", layout="wide")
 
-# --- Load Model ---
-MODEL_PATH = "advanced_churn_model.pkl"
-try:
-    with open(MODEL_PATH, "rb") as f:
-        model_data = pickle.load(f)
-        model = model_data["model"]
-        scaler = model_data["scaler"]
-        feature_names = model_data["features"]
-except Exception as e:
-    st.error("❌ Model file not found. Please ensure 'advanced_churn_model.pkl' is in the app directory.")
-    st.stop()
+# Dark theme colors
+primary_bg = "#0d1117"
+card_bg = "#161b22"
+text_color = "#f0f6fc"
+accent = "#00e1ff"
+shadow = "0px 0px 10px rgba(0,225,255,0.5)"
 
-# --- Header Banner ---
-with st.container():
-    st.markdown("<h1 style='text-align: center; color: #4CAF50;'>📊 Customer Churn Prediction</h1>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: gray;'>Predict if a customer will churn based on service usage</p>", unsafe_allow_html=True)
-    st.markdown("---")
+# Custom CSS
+st.markdown(f"""
+<style>
+body, .stApp {{
+    background-color: {primary_bg};
+    color: {text_color};
+}}
+.big-title {{
+    font-size:32px !important;
+    font-weight:bold;
+    color: {accent};
+}}
+.subtitle {{
+    font-size:18px;
+    color: #9ca3af;
+    margin-bottom: 20px;
+}}
+.metric-card {{
+    background-color: {card_bg};
+    padding:20px;
+    border-radius:12px;
+    box-shadow: 0 0 10px rgba(0,225,255,0.2);
+    text-align:center;
+}}
+.pred-card {{
+    background-color: {card_bg};
+    padding:15px 20px;
+    border-radius:12px;
+    margin-bottom:10px;
+    border: 1px solid {accent};
+    box-shadow: {shadow};
+}}
+.result-card {{
+    background-color: {card_bg};
+    padding:15px 20px;
+    border-radius:12px;
+    margin-top:20px;
+    border: 1px solid {accent};
+    box-shadow: {shadow};
+}}
+.big-btn > button {{
+    background-color: {accent};
+    color: black;
+    width: 100%;
+    padding: 0.75em;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 8px;
+}}
+.footer {{
+    color: gray;
+    text-align: center;
+    font-size: 13px;
+    margin-top: 40px;
+}}
+a.footer-link {{
+    color: #9ca3af;
+    text-decoration: none;
+}}
+</style>
+""", unsafe_allow_html=True)
 
-# --- Sidebar Info ---
+# Sidebar branding
 with st.sidebar:
-    st.header("📁 About")
-    st.write("This app uses a machine learning model trained on telecom customer data to predict churn.")
-    st.markdown("---")
-    st.image("logo.png", use_column_width=True, caption="Built by Yadagiri")
+    st.markdown("Yadagiri")
+    st.markdown("Customer Churn Prediction App")
+    st.markdown("[View on GitHub](https://github.com/k-yadagiri/churn_prediction)")
 
-# --- Input Section ---
-st.subheader("📝 Enter Customer Details")
+# Load data & model
+@st.cache_data
+def load_data():
+    return pd.read_csv('churn_dataset.csv')
 
-with st.form("churn_form"):
-    col1, col2 = st.columns(2)
+@st.cache_resource
+def load_model():
+    with open('advanced_churn_model.pkl', 'rb') as f:
+        model, scaler, columns = pickle.load(f)
+    return model, scaler, columns
 
-    with col1:
-        gender = st.selectbox("Gender", ["Male", "Female"])
-        SeniorCitizen = st.selectbox("Senior Citizen", [0, 1])
-        Partner = st.selectbox("Partner", ["Yes", "No"])
-        Dependents = st.selectbox("Dependents", ["Yes", "No"])
-        PhoneService = st.selectbox("Phone Service", ["Yes", "No"])
-        MultipleLines = st.selectbox("Multiple Lines", ["Yes", "No", "No phone service"])
+data = load_data()
+model, scaler, model_columns = load_model()
 
-    with col2:
-        InternetService = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
-        OnlineSecurity = st.selectbox("Online Security", ["Yes", "No"])
-        OnlineBackup = st.selectbox("Online Backup", ["Yes", "No"])
-        DeviceProtection = st.selectbox("Device Protection", ["Yes", "No"])
-        TechSupport = st.selectbox("Tech Support", ["Yes", "No"])
-        StreamingTV = st.selectbox("Streaming TV", ["Yes", "No"])
-        Contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
-        tenure = st.slider("Tenure (in months)", 0, 72, 12)
-        MonthlyCharges = st.number_input("Monthly Charges", 0.0, 200.0, step=1.0)
+# Sidebar navigation (move AFTER load to avoid NameError)
+page = st.sidebar.radio("Navigation", ["🏠 Home", "📊 Insights"])
 
-    submitted = st.form_submit_button("🔍 Predict")
+# Header
+st.markdown(f"<div class='big-title'>Telecom Customer Churn Dashboard</div>", unsafe_allow_html=True)
+st.markdown("<div class='subtitle'>Understand why customers churn & predict risk instantly.</div>", unsafe_allow_html=True)
 
-# --- Prediction ---
-if submitted:
-    input_dict = {
-        'SeniorCitizen': SeniorCitizen,
-        'tenure': tenure,
-        'MonthlyCharges': MonthlyCharges,
-        f'gender_{gender}': 1,
-        f'Partner_{Partner}': 1,
-        f'Dependents_{Dependents}': 1,
-        f'PhoneService_{PhoneService}': 1,
-        f'MultipleLines_{MultipleLines}': 1,
-        f'InternetService_{InternetService}': 1,
-        f'OnlineSecurity_{OnlineSecurity}': 1,
-        f'OnlineBackup_{OnlineBackup}': 1,
-        f'DeviceProtection_{DeviceProtection}': 1,
-        f'TechSupport_{TechSupport}': 1,
-        f'StreamingTV_{StreamingTV}': 1,
-        f'Contract_{Contract}': 1
-    }
+st.markdown("<br>", unsafe_allow_html=True)
 
-    input_df = pd.DataFrame([input_dict])
-    for col in feature_names:
-        if col not in input_df.columns:
-            input_df[col] = 0
-    input_df = input_df[feature_names]
+# Metrics
+churn_rate = (data['Churn'].value_counts(normalize=True) * 100).get('Yes', 0)
+col1, col2, col3 = st.columns(3)
+with col1:
+    st.markdown(f"<div class='metric-card'><h4>📉 Churn Rate</h4><h2>{churn_rate:.1f}%</h2></div>", unsafe_allow_html=True)
+with col2:
+    st.markdown(f"<div class='metric-card'><h4>👥 Total Customers</h4><h2>{len(data):,}</h2></div>", unsafe_allow_html=True)
+with col3:
+    st.markdown(f"<div class='metric-card'><h4>💲 Avg Monthly</h4><h2>${data['MonthlyCharges'].mean():.2f}</h2></div>", unsafe_allow_html=True)
 
-    input_scaled = scaler.transform(input_df)
-    prediction = model.predict(input_scaled)[0]
+# Pages
+if page == "🏠 Home":
+    st.subheader("🔮 Predict if customer will churn")
+    with st.form("predict_form"):
+        c1, c2 = st.columns(2)
+        with c1:
+            st.markdown("<div class='pred-card'>📅 Tenure (months)</div>", unsafe_allow_html=True)
+            tenure = st.slider('Tenure (months)', 0, 100, 12)
 
-    st.markdown("## 🎯 Prediction Result:")
-    if prediction == 1:
-        st.error("❗ The customer is likely to **Churn**.")
-    else:
-        st.success("✅ The customer is likely to **Stay**.")
+            st.markdown("<div class='pred-card'>💰 Monthly Charges</div>", unsafe_allow_html=True)
+            monthly = st.number_input('Monthly Charges ($)', 0.0, 200.0, 70.0)
 
-# --- Footer ---
-st.markdown("---")
-st.markdown("<p style='text-align: center; color: #888;'>Made with ❤️ by Yadagiri</p>", unsafe_allow_html=True)
+            st.markdown("<div class='pred-card'>💵 Total Charges</div>", unsafe_allow_html=True)
+            total = st.number_input('Total Charges ($)', 0.0, 10000.0, 2500.0)
+
+        with c2:
+            st.markdown("<div class='pred-card'>📄 Contract Type</div>", unsafe_allow_html=True)
+            contract = st.selectbox('Select Contract Type', ['Month-to-month', 'One year', 'Two year'])
+
+            st.markdown("<div class='pred-card'>💳 Payment Method</div>", unsafe_allow_html=True)
+            payment = st.selectbox('Select Payment Method', ['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'])
+
+            st.markdown("<div class='pred-card'>🌐 Internet Service</div>", unsafe_allow_html=True)
+            internet = st.selectbox('Select Internet Service', ['DSL', 'Fiber optic', 'No'])
+
+        predict_btn = st.form_submit_button("🚀 Predict Customer Churn Risk")
+
+    if predict_btn:
+        input_df = pd.DataFrame({
+            'tenure': [tenure],
+            'MonthlyCharges': [monthly],
+            'TotalCharges': [total],
+            f'Contract_{contract}': [1],
+            f'PaymentMethod_{payment}': [1],
+            f'InternetService_{internet}': [1]
+        })
+        for col in model_columns:
+            if col not in input_df:
+                input_df[col] = 0
+        input_df = input_df[model_columns]
+        pred = model.predict(scaler.transform(input_df))[0]
+        prob = model.predict_proba(scaler.transform(input_df))[0][1]*100
+
+        st.markdown("<div class='result-card'><h4>📊 Prediction Result</h4>", unsafe_allow_html=True)
+        if prob > 70:
+            st.markdown(f"<div class='result-card'>⚠ High churn risk! Estimated risk: {prob:.1f}.<br>"
+                        f"👉 Customer likely to churn. Consider loyalty discount or proactive contact.</div>", unsafe_allow_html=True)
+        elif prob > 40:
+            st.markdown(f"<div class='result-card'>⚠ Medium churn risk: {prob:.1f}.<br>"
+                        f"👉 Consider engagement strategies.</div>", unsafe_allow_html=True)
+        else:
+            st.markdown(f"<div class='result-card'>✅ Low churn risk: {prob:.1f}.<br>"
+                        f"Customer likely to stay. Continue current retention approach.</div>", unsafe_allow_html=True)
+
+elif page == "📊 Insights":
+    st.subheader("📊 Data Insights & EDA")
+    st.subheader("✅ Churn Distribution")
+    fig1 = px.histogram(data, x='Churn', color='Churn', color_discrete_sequence=['#FF6B6B','#4ECDC4'])
+    fig1.update_layout(paper_bgcolor=primary_bg, plot_bgcolor=primary_bg, font_color=text_color)
+    st.plotly_chart(fig1, use_container_width=True)
+
+    st.subheader("💳 Churn by Payment Method")
+    churn_payment = data.groupby('PaymentMethod')['Churn'].value_counts(normalize=True).unstack()['Yes']*100
+    fig2 = px.bar(churn_payment.sort_values(), orientation='h', color=churn_payment, color_continuous_scale='blues')
+    fig2.update_layout(paper_bgcolor=primary_bg, plot_bgcolor=primary_bg, font_color=text_color)
+    st.plotly_chart(fig2, use_container_width=True)
+
+    st.subheader("📑 Churn by Contract Type")
+    churn_contract = data.groupby('Contract')['Churn'].value_counts(normalize=True).unstack()['Yes']*100
+    fig3 = px.bar(x=churn_contract.index, y=churn_contract.values, color=churn_contract.values, color_continuous_scale='teal')
+    fig3.update_layout(paper_bgcolor=primary_bg, plot_bgcolor=primary_bg, font_color=text_color)
+    st.plotly_chart(fig3, use_container_width=True)
+
+# Footer
+st.markdown("<div class='footer'>Developed by Yadagiri | "
+            "<a class='footer-link' href='https://github.com/k-yadagiri'>GitHub</a></div>", 
+            unsafe_allow_html=True)
