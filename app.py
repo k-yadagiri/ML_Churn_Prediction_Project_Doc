@@ -11,93 +11,89 @@ st.set_page_config(page_title="Churn Predictor", layout="wide")
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
-body, .stApp {
-    background-color: #f2f5f9;
-    font-family: 'Poppins', sans-serif;
-    color: #1b1b1b;
+:root {
+    --bg-color: #f2f5f9;
+    --text-color: #1b1b1b;
+    --input-bg: #e0e5ec;
+    --box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
 }
-
-h1, h2, h3, h4, h5, h6, label, .stTextInput label, .stSelectbox label, .stSlider label, .stNumberInput label {
-    color: #111 !important;
+body, .stApp {
+    background-color: var(--bg-color) !important;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color) !important;
+}
+h1, h2, h3, h4, h5, h6, label, .stTextInput label, .stSelectbox label, .stSlider label {
+    color: var(--text-color) !important;
     font-weight: 600 !important;
 }
-
 input, select, textarea {
     border-radius: 10px !important;
     border: none !important;
     padding: 0.6rem !important;
-    background: #e0e5ec !important;
+    background: var(--input-bg) !important;
     box-shadow: inset 5px 5px 10px #c2c9d6, inset -5px -5px 10px #ffffff;
-    color: #1a1a1a !important;
-    font-weight: 500 !important;
+    color: var(--text-color) !important;
 }
-
-.stSelectbox div[data-baseweb="select"] > div {
-    background-color: #e0e5ec !important;
-    color: #1a1a1a !important;
+.stNumberInput input, .stSelectbox div[data-baseweb="select"] > div {
+    background-color: var(--input-bg) !important;
+    color: var(--text-color) !important;
 }
-
-.stNumberInput input {
-    background-color: #e0e5ec !important;
-    color: #1a1a1a !important;
-    font-weight: 500 !important;
-}
-
-.stSlider > div {
-    color: #1a1a1a !important;
-    font-weight: 500;
-}
-
 .stButton > button {
     background-color: #dee4f1 !important;
-    color: #1e1e1e !important;
+    color: var(--text-color) !important;
     padding: 0.6em 1.2em !important;
     border-radius: 12px !important;
     border: none !important;
-    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff !important;
+    box-shadow: var(--box-shadow) !important;
     font-weight: bold !important;
 }
-
 .stButton > button:hover {
     background-color: #cfd7e5 !important;
-    color: #000 !important;
 }
-
-.metric-box {
-    background-color: #e0e5ec;
+.metric-box, .gauge-card {
+    background-color: var(--input-bg);
     padding: 15px;
     border-radius: 12px;
-    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
-    text-align: center;
-    color: #212121;
+    box-shadow: var(--box-shadow);
+    color: var(--text-color);
     font-weight: 600;
 }
-
-.gauge-card {
-    background-color: #e0e5ec;
-    padding: 15px;
-    border-radius: 12px;
-    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
-    margin-top: 20px;
-    color: #1f1f1f;
-    font-weight: 500;
-}
-
-/* Fix dropdown and select visibility */
-[data-baseweb="select"] {
-    background-color: #e0e5ec !important;
-    color: #1a1a1a !important;
-    font-weight: 500 !important;
-}
-
-.stMarkdown p {
-    color: #1b1b1b !important;
-}
-
 hr {
     border-color: #ccc;
 }
+@media screen and (max-width: 768px) {
+    .metric-box, .gauge-card {
+        padding: 10px !important;
+        font-size: 0.9rem;
+    }
+    .stButton > button {
+        width: 100%;
+    }
+}
 </style>
+
+<!-- 🔘 Dark Mode Toggle Button -->
+<div style='text-align: right; padding: 0 10px 10px 0'>
+    <button onclick="toggleTheme()" style='padding:6px 16px; background:#5b8def; color:white; border:none; border-radius:10px; font-weight:bold;'>🌓 Toggle Theme</button>
+</div>
+
+<script>
+function toggleTheme() {
+    const root = document.documentElement;
+    const currentBg = getComputedStyle(root).getPropertyValue('--bg-color').trim();
+    if (currentBg === '#f2f5f9') {
+        root.style.setProperty('--bg-color', '#1c1c1c');
+        root.style.setProperty('--text-color', '#f5f5f5');
+        root.style.setProperty('--input-bg', '#2a2a2a');
+        root.style.setProperty('--box-shadow', '5px 5px 15px #111, -5px -5px 15px #2e2e2e');
+    } else {
+        root.style.setProperty('--bg-color', '#f2f5f9');
+        root.style.setProperty('--text-color', '#1b1b1b');
+        root.style.setProperty('--input-bg', '#e0e5ec');
+        root.style.setProperty('--box-shadow', '5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff');
+    }
+}
+</script>
 """, unsafe_allow_html=True)
 
 
