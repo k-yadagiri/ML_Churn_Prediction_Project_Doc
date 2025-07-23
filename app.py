@@ -5,7 +5,7 @@ import pickle
 from PIL import Image
 import os
 
-# --- Page Config ---
+# --- Page config ---
 st.set_page_config(page_title="Customer Churn Prediction - Yadagiri", page_icon="🔍", layout="wide")
 
 # --- Load Model & Scaler ---
@@ -17,17 +17,11 @@ try:
         model = model_data["model"]
         scaler = model_data["scaler"]
         feature_names = model_data["features"]
-except FileNotFoundError:
-    st.error(f"❌ File '{MODEL_PATH}' not found. Please ensure it's in the same directory as 'app.py'.")
-    st.stop()
-except KeyError as e:
-    st.error(f"❌ Missing key in pickle file: {e}. Expected keys: 'model', 'scaler', 'features'.")
-    st.stop()
 except Exception as e:
-    st.error(f"❌ Failed to load the model file: {e}")
+    st.error("❌ Failed to load the model file. Please ensure 'advanced_churn_model.pkl' is in the app directory.")
     st.stop()
 
-# --- Logo Section ---
+# --- Logo or Banner ---
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     try:
@@ -37,7 +31,7 @@ with col2:
     except:
         st.markdown("<h3 style='text-align:center;'>📊 Customer Churn Prediction App - Yadagiri</h3>", unsafe_allow_html=True)
 
-# --- Title ---
+# --- App Title ---
 st.markdown("<h1 style='text-align: center;font-size: 50px; color: #FFFFFF;'>Customer Churn Prediction by Yadagiri</h1>", unsafe_allow_html=True)
 st.markdown("---")
 
@@ -72,7 +66,7 @@ with st.form("churn_form"):
 if submitted:
     st.markdown("---")
 
-    # Create input dict
+    # Prepare input dictionary for prediction
     input_dict = {
         'SeniorCitizen': SeniorCitizen,
         'tenure': tenure,
@@ -91,25 +85,23 @@ if submitted:
         f'Contract_{Contract}': 1
     }
 
+    # Convert to DataFrame and align with model features
     input_df = pd.DataFrame([input_dict])
-
-    # Ensure all feature columns exist
     for col in feature_names:
         if col not in input_df.columns:
             input_df[col] = 0
     input_df = input_df[feature_names]
 
-    try:
-        input_scaled = scaler.transform(input_df)
-        prediction = model.predict(input_scaled)[0]
+    # Scale input and make prediction
+    input_scaled = scaler.transform(input_df)
+    prediction = model.predict(input_scaled)[0]
 
-        st.markdown("### 🎯 Prediction Result:")
-        if prediction == 1:
-            st.error("❌ The customer is likely to churn.")
-        else:
-            st.success("✅ The customer is likely to stay.")
-    except Exception as e:
-        st.error(f"❌ Prediction failed: {e}")
+    # Display result
+    st.markdown("### 🎯 Prediction Result:")
+    if prediction == 1:
+        st.error("❌ The customer is likely to churn.")
+    else:
+        st.success("✅ The customer is likely to stay.")
 
 # --- Footer ---
 st.markdown("---")
