@@ -14,32 +14,55 @@ st.markdown("""
 body, .stApp {
     background-color: #f2f5f9;
     font-family: 'Poppins', sans-serif;
-    color: #212121;
+    color: #1b1b1b;
 }
-h1, h2, h3, h4, h5, h6, label, .stTextInput label, .stSelectbox label, .stSlider label {
-    color: #1a1a1a !important;
-    font-weight: 600;
+
+h1, h2, h3, h4, h5, h6, label, .stTextInput label, .stSelectbox label, .stSlider label, .stNumberInput label {
+    color: #111 !important;
+    font-weight: 600 !important;
 }
+
 input, select, textarea {
     border-radius: 10px !important;
     border: none !important;
     padding: 0.6rem !important;
     background: #e0e5ec !important;
     box-shadow: inset 5px 5px 10px #c2c9d6, inset -5px -5px 10px #ffffff;
-    color: #1c1c1c !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
 }
-.stButton>button {
-    background-color: #dee4f1;
-    color: #1e1e1e;
-    padding: 0.6em 1em;
-    border-radius: 12px;
-    border: none;
-    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
-    font-weight: bold;
+
+.stSelectbox div[data-baseweb="select"] > div {
+    background-color: #e0e5ec !important;
+    color: #1a1a1a !important;
 }
-.stButton>button:hover {
-    background-color: #cfd7e5;
+
+.stNumberInput input {
+    background-color: #e0e5ec !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
 }
+
+.stSlider > div {
+    color: #1a1a1a !important;
+    font-weight: 500;
+}
+
+.stButton > button {
+    background-color: #dee4f1 !important;
+    color: #1e1e1e !important;
+    padding: 0.6em 1.2em !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff !important;
+    font-weight: bold !important;
+}
+
+.stButton > button:hover {
+    background-color: #cfd7e5 !important;
+    color: #000 !important;
+}
+
 .metric-box {
     background-color: #e0e5ec;
     padding: 15px;
@@ -47,7 +70,9 @@ input, select, textarea {
     box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
     text-align: center;
     color: #212121;
+    font-weight: 600;
 }
+
 .gauge-card {
     background-color: #e0e5ec;
     padding: 15px;
@@ -55,6 +80,22 @@ input, select, textarea {
     box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
     margin-top: 20px;
     color: #1f1f1f;
+    font-weight: 500;
+}
+
+/* Fix dropdown and select visibility */
+[data-baseweb="select"] {
+    background-color: #e0e5ec !important;
+    color: #1a1a1a !important;
+    font-weight: 500 !important;
+}
+
+.stMarkdown p {
+    color: #1b1b1b !important;
+}
+
+hr {
+    border-color: #ccc;
 }
 </style>
 """, unsafe_allow_html=True)
