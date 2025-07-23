@@ -123,14 +123,6 @@ elif option == "Churn Prediction":
 
         prob = model.predict_proba(scaler.transform(input_df))[0][1] * 100
 
-        st.subheader("🎯 Churn Result")
-        if prob > 70:
-            st.error(f"❌ High Churn Risk: {prob:.2f}%")
-        elif prob > 40:
-            st.warning(f"⚠️ Medium Churn Risk: {prob:.2f}%")
-        else:
-            st.success(f"✅ Low Churn Risk: {prob:.2f}%")
-
         st.subheader("📟 Churn Probability Gauge")
 
         fig_gauge = go.Figure(go.Indicator(
@@ -152,7 +144,18 @@ elif option == "Churn Prediction":
             paper_bgcolor="#0e1117",
             font={'color': "white", 'family': "Arial"}
         )
-        st.plotly_chart(fig_gauge, use_container_width=True)
+        st.plotly_chart(fig_gauge, use_container_width=True)        
+
+        
+        st.subheader("🎯 Churn Result")
+        if prob > 70:
+            st.error(f"❌ High Churn Risk: {prob:.2f}%")
+        elif prob > 40:
+            st.warning(f"⚠️ Medium Churn Risk: {prob:.2f}%")
+        else:
+            st.success(f"✅ Low Churn Risk: {prob:.2f}%")
+
+
 
 # --- Footer ---
 st.markdown("""
