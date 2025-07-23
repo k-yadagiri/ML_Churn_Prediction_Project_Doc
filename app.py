@@ -9,11 +9,16 @@ st.set_page_config(page_title="Churn Predictor", layout="wide")
 
 # --- Light Theme & Neumorphic CSS ---
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 <style>
 body, .stApp {
     background-color: #f2f5f9;
-    font-family: 'Segoe UI', sans-serif;
-    color: #333333;
+    font-family: 'Poppins', sans-serif;
+    color: #212121;
+}
+h1, h2, h3, h4, h5, h6, label, .stTextInput label, .stSelectbox label, .stSlider label {
+    color: #1a1a1a !important;
+    font-weight: 600;
 }
 input, select, textarea {
     border-radius: 10px !important;
@@ -21,10 +26,11 @@ input, select, textarea {
     padding: 0.6rem !important;
     background: #e0e5ec !important;
     box-shadow: inset 5px 5px 10px #c2c9d6, inset -5px -5px 10px #ffffff;
+    color: #1c1c1c !important;
 }
 .stButton>button {
     background-color: #dee4f1;
-    color: #3b3b3b;
+    color: #1e1e1e;
     padding: 0.6em 1em;
     border-radius: 12px;
     border: none;
@@ -40,6 +46,7 @@ input, select, textarea {
     border-radius: 12px;
     box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
     text-align: center;
+    color: #212121;
 }
 .gauge-card {
     background-color: #e0e5ec;
@@ -47,9 +54,11 @@ input, select, textarea {
     border-radius: 12px;
     box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
     margin-top: 20px;
+    color: #1f1f1f;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 # --- Load Data & Model ---
 @st.cache_data
@@ -72,7 +81,7 @@ data = load_data()
 model, scaler, model_columns = load_model()
 
 # --- Header ---
-st.title("📱 Telecom Churn Predictor - Neumorphic Style")
+st.title("📱 Telecom Churn Predictor")
 st.write("Enter customer details to predict churn risk:")
 
 # --- Metric Cards ---
