@@ -186,7 +186,7 @@ if submit:
     prediction = model.predict(scaler.transform(input_df))[0]
     prob = model.predict_proba(scaler.transform(input_df))[0][1] * 100
 
-    # Gauge Chart (simulate neumorphic circular meter)
+    # Gauge Chart
     st.markdown("<h4>📊 Churn Risk Gauge</h4>", unsafe_allow_html=True)
     gauge = go.Figure(go.Indicator(
         mode="gauge+number",
@@ -205,7 +205,6 @@ if submit:
     ))
     st.plotly_chart(gauge, use_container_width=True)
 
-    # Risk Interpretation
     with st.container():
         st.markdown("<div class='gauge-card'>", unsafe_allow_html=True)
         if prob > 70:
