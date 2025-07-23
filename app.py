@@ -1,126 +1,163 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import pickle
-from PIL import Image
+import plotly.graph_objects as go
+import os
 
-# ---------- Page Setup ----------
-st.set_page_config(page_title="Churn Prediction", layout="wide")
+# --- Page Config ---
+st.set_page_config(page_title="Churn Predictor", layout="wide")
 
-# ---------- Custom CSS for Light Neumorphic Theme ----------
+# --- Light Theme & Neumorphic CSS ---
 st.markdown("""
-    <style>
-    body {
-        background-color: #eaf1fb;
-    }
-    .main {
-        background-color: #eaf1fb;
-        color: #3d3d3d;
-    }
-    .stApp {
-        font-family: 'Segoe UI', sans-serif;
-        background-color: #eaf1fb;
-    }
-    h1, h2, h3, h4, h5 {
-        color: #3d3d3d;
-    }
-    label, .stRadio > label {
-        color: #3d3d3d !important;
-    }
-    input, .stTextInput, .stSelectbox {
-        background-color: #f4f7fd;
-        border: 1px solid #cfd8e3;
-        border-radius: 15px;
-        color: #3d3d3d;
-        padding: 8px 12px;
-        box-shadow: 5px 5px 10px #d1d9e6, -5px -5px 10px #ffffff;
-    }
-    .stButton>button {
-        background-color: #dfe9f3;
-        color: #3d3d3d;
-        border: none;
-        border-radius: 12px;
-        padding: 0.6em 1.2em;
-        box-shadow: 4px 4px 8px #c5ccd8, -4px -4px 8px #ffffff;
-        transition: 0.3s;
-    }
-    .stButton>button:hover {
-        background-color: #d0def0;
-        color: black;
-        box-shadow: 2px 2px 6px #b0b8c0, -2px -2px 6px #ffffff;
-    }
-    </style>
+<style>
+body, .stApp {
+    background-color: #f2f5f9;
+    font-family: 'Segoe UI', sans-serif;
+    color: #333333;
+}
+input, select, textarea {
+    border-radius: 10px !important;
+    border: none !important;
+    padding: 0.6rem !important;
+    background: #e0e5ec !important;
+    box-shadow: inset 5px 5px 10px #c2c9d6, inset -5px -5px 10px #ffffff;
+}
+.stButton>button {
+    background-color: #dee4f1;
+    color: #3b3b3b;
+    padding: 0.6em 1em;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
+    font-weight: bold;
+}
+.stButton>button:hover {
+    background-color: #cfd7e5;
+}
+.metric-box {
+    background-color: #e0e5ec;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
+    text-align: center;
+}
+.gauge-card {
+    background-color: #e0e5ec;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 5px 5px 15px #c2c9d6, -5px -5px 15px #ffffff;
+    margin-top: 20px;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# ---------- Load Model ----------
-model_path = "advanced_churn_model.pkl"
-scaler_path = "scaler.pkl"
+# --- Load Data & Model ---
+@st.cache_data
+def load_data():
+    return pd.read_csv("churn_dataset.csv")
 
-try:
-    with open(model_path, "rb") as f:
-        model = pickle.load(f)
-    with open(scaler_path, "rb") as f:
-        scaler = pickle.load(f)
-except FileNotFoundError:
-    st.error("Model or Scaler file not found. Ensure they're in the app directory.")
+@st.cache_resource
+def load_model():
+    with open("advanced_churn_model.pkl", "rb") as f:
+        model, scaler, columns = pickle.load(f)
+    return model, scaler, columns
+
+# Check model exists
+if not os.path.exists("advanced_churn_model.pkl"):
+    st.error("❌ Model file not found.")
     st.stop()
 
-# ---------- Sidebar ----------
-st.sidebar.image("logo.png", use_column_width=True)
-st.sidebar.title("🔎 Churn Predictor")
-st.sidebar.info("Fill in the user details to predict churn.")
+# Load
+data = load_data()
+model, scaler, model_columns = load_model()
 
-# ---------- Main UI ----------
-st.markdown("## 📋 Customer Information")
-st.markdown("Please enter the following details:")
+# --- Header ---
+st.title("📱 Telecom Churn Predictor - Neumorphic Style")
+st.write("Enter customer details to predict churn risk:")
 
-col1, col2 = st.columns(2)
-
+# --- Metric Cards ---
+churn_rate = (data['Churn'].value_counts(normalize=True).get('Yes', 0)) * 100
+col1, col2, col3 = st.columns(3)
 with col1:
-    gender = st.selectbox("Gender", ["Male", "Female"])
-    senior_citizen = st.selectbox("Senior Citizen", ["No", "Yes"])
-    partner = st.selectbox("Partner", ["Yes", "No"])
-    dependents = st.selectbox("Dependents", ["Yes", "No"])
-    tenure = st.number_input("Tenure (in months)", min_value=0, max_value=72, value=12)
-
+    st.markdown(f"<div class='metric-box'><h5>Churn Rate</h5><h2>{churn_rate:.1f}%</h2></div>", unsafe_allow_html=True)
 with col2:
-    contract = st.selectbox("Contract Type", ["Month-to-month", "One year", "Two year"])
-    monthly_charges = st.number_input("Monthly Charges", min_value=0.0, max_value=500.0, value=70.0)
-    total_charges = st.number_input("Total Charges", min_value=0.0, max_value=10000.0, value=1500.0)
-    internet_service = st.selectbox("Internet Service", ["DSL", "Fiber optic", "No"])
-    payment_method = st.selectbox("Payment Method", ["Electronic check", "Mailed check", "Bank transfer", "Credit card"])
+    st.markdown(f"<div class='metric-box'><h5>Total Customers</h5><h2>{len(data):,}</h2></div>", unsafe_allow_html=True)
+with col3:
+    st.markdown(f"<div class='metric-box'><h5>Avg Monthly Charges</h5><h2>${data['MonthlyCharges'].mean():.2f}</h2></div>", unsafe_allow_html=True)
 
-# ---------- Prediction Button ----------
-if st.button("🔍 Predict Churn"):
-    input_data = pd.DataFrame({
-        "gender": [gender],
-        "SeniorCitizen": [1 if senior_citizen == "Yes" else 0],
-        "Partner": [partner],
-        "Dependents": [dependents],
-        "tenure": [tenure],
-        "Contract": [contract],
-        "MonthlyCharges": [monthly_charges],
-        "TotalCharges": [total_charges],
-        "InternetService": [internet_service],
-        "PaymentMethod": [payment_method]
+st.divider()
+
+# --- Form Input Section ---
+with st.form("prediction_form"):
+    st.subheader("🎛️ Customer Details")
+    col1, col2 = st.columns(2)
+    with col1:
+        tenure = st.slider("📅 Tenure (Months)", 0, 100, 12)
+        monthly = st.number_input("💰 Monthly Charges ($)", 0.0, 200.0, 70.0)
+        total = st.number_input("💵 Total Charges ($)", 0.0, 10000.0, 2500.0)
+    with col2:
+        contract = st.selectbox("📄 Contract Type", ['Month-to-month', 'One year', 'Two year'])
+        payment = st.selectbox("💳 Payment Method", ['Electronic check', 'Mailed check', 'Bank transfer (automatic)', 'Credit card (automatic)'])
+        internet = st.selectbox("🌐 Internet Service", ['DSL', 'Fiber optic', 'No'])
+
+    submit = st.form_submit_button("🚀 Predict Churn")
+
+# --- Prediction ---
+if submit:
+    input_df = pd.DataFrame({
+        'tenure': [tenure],
+        'MonthlyCharges': [monthly],
+        'TotalCharges': [total],
+        f'Contract_{contract}': [1],
+        f'PaymentMethod_{payment}': [1],
+        f'InternetService_{internet}': [1]
     })
 
-    # Encoding categorical data (Example only, match this with your preprocessing)
-    input_encoded = pd.get_dummies(input_data)
-    input_encoded = input_encoded.reindex(columns=model.feature_names_in_, fill_value=0)
+    for col in model_columns:
+        if col not in input_df:
+            input_df[col] = 0
+    input_df = input_df[model_columns]
 
-    # Scale
-    input_scaled = scaler.transform(input_encoded)
+    prediction = model.predict(scaler.transform(input_df))[0]
+    prob = model.predict_proba(scaler.transform(input_df))[0][1] * 100
 
-    # Predict
-    prediction = model.predict(input_scaled)[0]
-    probability = model.predict_proba(input_scaled)[0][1]
+    # Gauge Chart (simulate neumorphic circular meter)
+    st.markdown("<h4>📊 Churn Risk Gauge</h4>", unsafe_allow_html=True)
+    gauge = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=prob,
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': "Churn Probability (%)"},
+        gauge={
+            'axis': {'range': [0, 100]},
+            'bar': {'color': "#5b8def"},
+            'steps': [
+                {'range': [0, 40], 'color': "#c8e6c9"},
+                {'range': [40, 70], 'color': "#fff59d"},
+                {'range': [70, 100], 'color': "#ef9a9a"}
+            ]
+        }
+    ))
+    st.plotly_chart(gauge, use_container_width=True)
 
-    if prediction == 1:
-        st.error(f"❌ Customer is likely to churn. (Probability: {probability:.2%})")
-    else:
-        st.success(f"✅ Customer is likely to stay. (Probability: {1 - probability:.2%})")
+    # Risk Interpretation
+    with st.container():
+        st.markdown("<div class='gauge-card'>", unsafe_allow_html=True)
+        if prob > 70:
+            st.markdown(f"❌ **High Risk of Churn** - {prob:.1f}%")
+            st.write("🔁 Consider proactive retention strategies.")
+        elif prob > 40:
+            st.markdown(f"⚠️ **Moderate Risk** - {prob:.1f}%")
+            st.write("📞 Might require engagement.")
+        else:
+            st.markdown(f"✅ **Low Risk** - {prob:.1f}%")
+            st.write("🎉 Customer likely to stay.")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-# ---------- Footer ----------
-st.markdown("---")
-st.markdown("Made with ❤️ by **Yadagiri** | [GitHub](https://github.com/yadagiri)")
+# --- Footer ---
+st.markdown("""
+<br><hr style='border-color:#ccc'/>
+<div style='text-align:center; color:gray'>
+Made with 💙 by <a href='https://github.com/k-yadagiri' target='_blank'>Yadagiri</a>
+</div>
+""", unsafe_allow_html=True)
