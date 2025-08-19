@@ -4,6 +4,14 @@ This project is a Machine Learning application built to predict **customer churn
 It helps businesses identify customers who are likely to leave, using historical customer data and a trained ML model.  
 
 ---
+## 🌐 Live Demo  
+Try out the deployed project here:  
+
+- 🚀 **Streamlit App** → [Customer Churn Prediction](https://yadagirichurnprediction.streamlit.app/)  
+- 🤗 **Hugging Face Space** → [Churn Prediction](https://huggingface.co/spaces/giriyadagiri/churn_prediction)  
+
+---
+
 
 ## 📂 Files in this Repository
 - **app.py** → Streamlit/Flask app for making predictions.  
